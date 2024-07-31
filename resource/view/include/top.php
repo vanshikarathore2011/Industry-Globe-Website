@@ -2,7 +2,7 @@
 <html lang="en">
 	<head>
 
-	<?php
+		<?php
 			$pageName = basename($_SERVER['PHP_SELF']);
 			$pageName = str_replace('.php', '', $pageName);
 
@@ -17,246 +17,303 @@
 			}
 		?>
 
-		<meta charset="utf-8">
-		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-		<meta name="description" content="Back End Development">
+		<meta charset="UTF-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+		<meta name="keywords" content="eCommerce Project" />
+		<meta name="description" content="Full Stack Web Developer">
 		<meta name="author" content="Md. Abdullah Al Mamun Roni">
-		<link rel="shortcut icon" href="../public/assets/images/favicon/faviconBackEnd.png" type="image/png">
+		<title> IndustryGlobe | <?php echo $pageTitle ?> </title>
 		
-		<title>SuperShop | <?php echo $pageTitle ?> </title>
+		<link rel="icon" type="image/icon" href="public/assets/images/favicon/faviconFrontEnd.png">
 		
-		<!--=*= CSS FILES SOURCE START =*=-->
-		<link href="public/summernote/summernote-lite.min.css" rel="stylesheet">
-		<link href="public/js/datatable/css/demo_table.css" rel="stylesheet">
-		<link href="public/css/style.css" rel="stylesheet">
-		<link href="public/css/style-responsive.css" rel="stylesheet">
-		<link href="public/css/custom.css" rel="stylesheet">
-		<!--=*= CSS FILES SOURCE END =*=-->
+		<!--=*= CSS SOURCE FILES =*=-->
+		<link rel="stylesheet" href="public/assets/css/bootstrap.min.css">
+		<link rel="stylesheet" href="public/assets/css/toastr.css">
+		<link rel="stylesheet" href="public/assets/css/style.min.css">
+		<link rel="stylesheet" href="public/assets/css/custom.css">
+		<!--=*= CSS SOURCE FILES =*=-->
 		
-		<!--=*= JS SOURCE START =*=-->
-		<script src="public/js/jquery-3.5.1.min.js"></script>
-		<script src='public/tagplug/index.js'></script>
-		<!--=*= JS SOURCE END =*=-->
-		
-		<!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
-		<!--[if lt IE 9]>
-			<script src="public/js/html5shiv.js"></script>
-			<script src="public/js/respond.min.js"></script>
-		<![endif]-->
+		<!--=*= JS SOURCE FILES =*=-->
+		<script src="public/assets/js/jquery.min.js"></script>
+		<!--=*= JS SOURCE FILES =*=-->
 	</head>
-	
-	<body class="sticky-header">
-		<section>
-			<div class="left-side sticky-left-side">														
-				<div class="logo">
-					<a href="dashboard.php">
-						<img src="../public/assets/images/favicon/logoBackEnd.png" alt="" height="36px">
-					</a>
-				</div>
-				<div class="logo-icon text-center">
-					<a href="dashboard.php">
-						<img src="../public/assets/images/favicon/logoBackEnd(1).png" alt="" height="34px" width="34px">
-					</a>
-				</div>
-				<div class="left-side-inner">
+	<body>
+		
+		<?php
+			## ===*=== [C]ALLING CONTROLLER ===*=== ##
+			include("app/Models/Eloquent.php");
+			
+			
+			## ===*=== [O]BJECT DEFINED ===*=== ##
+			$eloquent = new Eloquent;
+			
+			
+			## ===*=== [F]ETCH CATEGORIES DATA FOR DISPLAY IN NAVIGATION BAR ===*=== ##
+			$columnName = $tableName = $whereValue = null;
+			$columnName = "*";
+			$tableName = "categories";
+			$whereValue['category_status'] = "Active";
+			$categoryMenu = $eloquent->selectData($columnName, $tableName, @$whereValue);
+			## ===*=== [F]ETCH CATEGORIES DATA FOR DISPLAY IN NAVIGATION BAR ===*=== ##
+			
+			
+			## ===*=== [I]NSERT DATA TO CART ITEM ===*=== ##
+			if(isset($_POST['add_to_cart']))
+			{
+				#== IF USER IS LOGGED IN
+				if(@$_SESSION['SSCF_login_id'] > 0)
+				{
+					#== CHECK FIRST: IS THIS ITEM AVAILABLE IN CART OR NOT?
+					$columnName = $tableName = $whereValue = null;
+					$columnName = "*";
+					$tableName = "shopcarts";
+					$whereValue["customer_id"] = $_SESSION['SSCF_login_id'];
+					$whereValue["product_id"] = $_POST['cart_product_id'];
+					$availabilityInCart = $eloquent->selectData($columnName, $tableName, @$whereValue);
 					
-					<!--=*= VISIBLE ON SMALL DEVICES =*=-->
-					<div class="visible-xs hidden-sm hidden-md hidden-lg">			
-						<div class="media logged-user">
-							<img alt="" src="<?php echo $GLOBALS['ADMINS_DIRECTORY'] . $_SESSION['SMC_login_admin_image']; ?>" class="media-object">
-							<div class="media-body">
-								<h4> <a href="#"> <?php echo $_SESSION['SMC_login_admin_name']; ?> </a> </h4>
-								<span> FULL STACK WEB DEVELOPER </span>
+					#== IF AVAILABLE
+					if(!empty($availabilityInCart))
+					{
+						#== UPDATE THE EXISTING ITEM QUANTITY IN CART
+						$columnName = $tableName = $whereValue = null;
+						$tableName = "shopcarts";
+						$columnValue["quantity"] = $_POST['cart_product_quantity'] + $availabilityInCart[0]['quantity'];
+						$whereValue["customer_id"] = $_SESSION['SSCF_login_id'];
+						$whereValue["product_id"] = $_POST['cart_product_id'];
+						$updateCartResult = $eloquent->updateData($tableName, $columnValue, @$whereValue);
+						$_SESSION['ADD_TO_CART_RESULT'] = $updateCartResult;
+					}
+					else
+					{
+						#== INSERT ITEMS INTO THE ADD TO CART
+						$columnValue = $tableName = null;
+						$tableName = "shopcarts";
+						$columnValue["customer_id"] = @$_SESSION['SSCF_login_id'];
+						$columnValue["product_id"] = $_POST['cart_product_id'];
+						$columnValue["quantity"] = $_POST['cart_product_quantity'];
+						$columnValue["created_at"] = date("Y-m-d H:i:s");
+						$addToCartResult = $eloquent->insertData($tableName, $columnValue);
+						$_SESSION['ADD_TO_CART_RESULT'] = $addToCartResult;
+					}
+				}
+				else
+				{
+					#== IF USER NOT LOGGED IN THEN NOTHING WILL BE HAPPEN
+					$_SESSION['ADD_TO_CART_RESULT'] = 0;
+				}
+			}
+			## ===*=== [I]NSERT DATA TO CART ITEM ===*=== ##
+			
+			
+			## ===*=== [G]ET CART SUMMARY DATA BASED ON JOIN QUERY ===*=== ##
+			$columnName = $tableName = $joinType = $onCondition = $whereValue = $formatBy = null;
+			$columnName["1"] = "shopcarts.quantity";
+			$columnName["2"] = "products.id";
+			$columnName["3"] = "products.product_name";
+			$columnName["4"] = "products.product_price";
+			$columnName["5"] = "products.product_master_image";
+			$tableName["MAIN"] = "shopcarts";
+			$joinType = "INNER";
+			$tableName["1"] = "products";
+			$onCondition["1"] = ["shopcarts.product_id", "products.id"];
+			$whereValue["shopcarts.customer_id"] = @$_SESSION['SSCF_login_id'];
+			$formatBy["DESC"] = "shopcarts.id";
+			$myaddcartItems = $eloquent->selectJoinData($columnName, $tableName, $joinType, $onCondition, @$whereValue, @$formatBy, @$paginate);
+			## ===*=== [G]ET CART SUMMARY DATA BASED ON JOIN QUERY ===*=== ##
+			
+			
+			## ===*=== [I]NSERT NEWSLETTERS DATA | FOR BOTH SUCH AS FOOTER AND MODAL ===*=== ##
+			if(isset($_POST['news_subscribe']))
+			{
+				$tableName = $columnValue = null;
+				$tableName = "newsletters";
+				$columnValue["newsletter_email"] = $_POST['user_newsletter'];
+				$columnValue["created_at"] = date("Y-m-d H:i:s");
+				$subscribeResult = $eloquent->insertData($tableName, $columnValue);
+			}
+			## ===*=== [I]NSERT NEWSLETTERS DATA | FOR BOTH SUCH AS FOOTER AND MODAL ===*=== ##
+		?>
+		
+		<!--=*= MAIN SECTION START =*=-->
+		<div class="page-wrapper">
+			<header class="header" id="header">
+				<div class="header-top">
+					<div class="container">
+						
+						<div class="header-right">
+							<p class="welcome-msg">Have a good day ! 
+								
+								<?php 
+									#== GREETING MESSAGE | IF USER LOGGED IN OR NOT
+									if(@$_SESSION['SSCF_login_id'] > 0) {
+										echo '<b>'. @$_SESSION['SSCF_login_user_name'] .'</b>' ;
+										} else {
+										echo '<b> GUEST </b>' ;
+									}
+								?>
+								
+							</p>
+							<div class="header-dropdown dropdown-expanded">
+								<a href="#">Links</a>
+								<div class="header-menu">
+									<ul>
+										<li><a href="dashboard.php">MY ACCOUNT </a></li>
+										<li><a href="contact.php">Contact us</a></li>
+										
+										<?php
+											#== IF USER AVAILABLE | APPEARED DYNAMICALLY
+											if(@$_SESSION['SSCF_login_id'] > 0) 
+											{
+												echo '<li><a href="?exit=yes">LOG OUT</a></li>';
+											}
+											else 
+											{
+												echo '<li><a href="login.php">LOG IN</a></li>';	
+											}
+										?>
+										
+									</ul>
+								</div>
+							</div>
+						</div>	
+					</div>
+				</div>
+				<div class="header-middle">
+					<div class="container">
+						<div class="header-left">
+							<a href="index.php" class="logo">
+								<img style="height: 60px;" src="public/assets/images/favicon/logoFrontEnd.png" alt="SuperShop Logo">
+							</a>
+						</div>
+						
+						<!--=*= SEARCH BAR =*=-->
+						<div class="header-center" style="padding-left: -20px;">
+							<form action="search.php" method="post" style="margin-bottom: -8px;">
+								<div class="input-group" style="width: 100%; margin: 0px 60px;">
+									<input type="search" class="form-control" name="keywords" id="search" placeholder="Type your Search Keyword" required>
+									<div class="input-group-append">
+										<button class="btn btn-sm btn-primary" type="submit"><i class="icon-magnifier"></i> SEARCH </button>
+									</div>
+									<div class="list-group list-group-flush list-style" id="show-list">
+										
+									</div>
+								</div>
+							</form>
+						</div>
+						<!--=*= SEARCH BAR =*=-->
+						
+						<div class="header-right">
+							<button class="mobile-menu-toggler" type="button"><i class="icon-menu"></i></button>
+							<div class="header-contact"><span>Call us now</span>
+								<a href="tel:#"><strong>+92 123456789</strong></a>
+							</div>
+							<div class="dropdown cart-dropdown">
+								<a href="#" class="dropdown-toggle" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" data-display="static">
+									<span class="cart-count"> <?php echo count(@$myaddcartItems); ?> </span>
+								</a>
+								<div class="dropdown-menu" >
+									<div class="dropdownmenu-wrapper">
+										<div class="dropdown-cart-header">
+											<span><?php echo count(@$myaddcartItems); ?> Items</span>
+											
+											<?php
+												if(count(@$myaddcartItems) > 0)
+												{
+													echo '<a href="cart.php"> View Cart </a>';
+												}
+												else
+												{
+													echo '<a href="index.php"> View Cart </a>';
+												}
+											?>
+											
+										</div>
+										<div class="dropdown-cart-products">
+											
+											<?php 
+												#== LIST OF ADD TO CARTED PRODUCT IN VIEW CART
+												$subTotal = 0;
+												foreach(@$myaddcartItems AS $eachCartItem)
+												{
+													echo '
+													<div class="product">
+														<div class="product-details">
+															<h4 class="product-title">
+																<a href="product.php?id='. $eachCartItem['id'] .'">'.$eachCartItem['product_name'].'</a>
+															</h4>
+															<span class="cart-product-info">
+															<span class="cart-product-qty">'.$eachCartItem['quantity'].'</span> X '.$GLOBALS['CURRENCY']. ' ' . $eachCartItem['product_price'].'</span>
+														</div>
+														<figure class="product-image-container">
+															<a href="product.php?id='. $eachCartItem['id'] .'" class="checkout-image">
+																<img src="'.$GLOBALS['PRODUCT_DIRECTORY'] . $eachCartItem['product_master_image'].'" alt="product">
+															</a>
+														</figure>
+													</div>
+													';
+													$subTotal += ($eachCartItem['quantity'] * $eachCartItem['product_price']);
+												}
+											?>
+											
+										</div>
+										<div class="dropdown-cart-total">
+											<span>Sub Total</span>
+											<span class="cart-total-price"><?php echo $GLOBALS['CURRENCY'] . " " . $subTotal; ?></span>
+										</div>
+										<div class="dropdown-cart-action">
+											
+											<?php
+												if(count(@$myaddcartItems) > 0)
+												{
+													echo '<a href="cart.php" class="btn btn-block"> Checkout </a>';
+												}
+												else
+												{
+													echo '<a href="index.php" class="btn btn-block"> Checkout </a>';
+												}
+											?>
+											
+										</div>
+									</div>
+								</div>
 							</div>
 						</div>
-						<h5 class="left-nav-title"> Account Information </h5>
-						<ul class="nav nav-pills nav-stacked custom-nav">
-							<li>
-								<a href="?exit=lock"> <i class="fa fa-user"></i> <span> Lock Screen </span> </a>
-							</li>
-							<li>
-								<a href="?exit=yes"> <i class="fa fa-sign-out"></i> <span> Sign Out </span> </a>
-							</li>
-						</ul>
 					</div>
-					<!--=*= VISIBLE ON SMALL DEVICES =*=-->
-					
-					<ul class="nav nav-pills nav-stacked custom-nav">
-						<li>
-							<a href="dashboard.php">
-								<i class="fa fa-home"></i> <span>Dashboard</span>
-							</a>
-						</li>
-						
-						<?php
-							## ===*=== [A]CCESS CONTROL CONTENT START ===*=== ##
-							if($_SESSION['SMC_login_admin_type'] == "Root Admin" || $_SESSION['SMC_login_admin_type'] == "Technical Operator")
-							{
-								echo '
-								<li class="menu-list">
-									<a href="#"> <i class="fa fa-user"></i> <span>Manage Admin</span> </a>
-									<ul class="sub-menu-list">
-										<li>
-											<a href="create-admin.php"> <i class="fa fa-plus-circle"></i> Create Admin </a>
-										</li>
-										<li>
-											<a href="list-admin.php"> <i class="fa fa-user"></i> List Admin </a>
-										</li>
-									</ul>
-								</li>
-								';
-							}
-							
-							if($_SESSION['SMC_login_admin_type'] == "Root Admin" || $_SESSION['SMC_login_admin_type'] == "Content Manager")
-							{
-								echo '
-								<li class="menu-list">
-									<a href="#"> <i class="fa fa-picture-o"></i></i> <span> Manage Slider </span> </a> <i class="fas fa-sliders-h"></i>
-									<ul class="sub-menu-list">
-										<li>
-											<a href="create-slider.php"> Add Image Slider </a>
-										</li>
-										<li>
-											<a href="list-slider.php"> List Image Slider </a>
-										</li>
-									</ul>
-								</li>
-								';
-							}
-							
-							if($_SESSION['SMC_login_admin_type'] == "Root Admin" || $_SESSION['SMC_login_admin_type'] == "Sales Manager")
-							{
-								echo '
-								<li class="menu-list">
-									<a href="#"> <i class="fa fa-users"></i> <span> Manage Customer </span> </a>
-									<ul class="sub-menu-list">
-										<li>
-											<a href="list-customer.php"> Customer List </a>
-										</li>
-										<li>
-											<a href="review.php"> Customer Overview </a>
-										</li>
-									</ul>
-								</li>
-								';
-							}
-							
-							if($_SESSION['SMC_login_admin_type'] == "Root Admin" || $_SESSION['SMC_login_admin_type'] == "Technical Operator")
-							{
-								echo '
-								<li class="menu-list">
-									<a href="#"> <i class="fa fa-folder-open"></i> <span> Manage Category </span> </a>
-									<ul class="sub-menu-list">
-										<li>
-											<a href="create-category.php"> Create Category </a>
-										</li>
-										<li>
-											<a href="list-category.php"> List Category </a>
-										</li>
-									</ul>
-								</li>
-								';
-							}
-							
-							if($_SESSION['SMC_login_admin_type'] == "Root Admin" || $_SESSION['SMC_login_admin_type'] == "Technical Operator")
-							{
-								echo '
-								<li class="menu-list">
-									<a href="#"> <i class="fa fa-list-alt"></i> <span> Manage Sub Category </span> </a>
-									<ul class="sub-menu-list">
-										<li>
-											<a href="create-subcategory.php"> Create Sub Category </a>
-										</li>
-										<li>
-											<a href="list-subcategory.php"> Sub Category List </a>
-										</li>
-									</ul>
-								</li>
-								';
-							}
-							
-							if($_SESSION['SMC_login_admin_type'] == "Root Admin" || $_SESSION['SMC_login_admin_type'] == "Content Manager")
-							{
-								echo '
-								<li class="menu-list">
-									<a href="#"> <i class="fa fa-th"></i> <span> Manage Products </span> </a>
-									<ul class="sub-menu-list">
-										<li>
-											<a href="create-product.php"> Create Products</a>
-										</li>
-										<li>
-											<a href="list-product.php"> Products List </a>
-										</li>
-									</ul>
-								</li>
-								';
-							}
-							
-							if($_SESSION['SMC_login_admin_type'] == "Root Admin" || $_SESSION['SMC_login_admin_type'] == "Sales Manager")
-							{
-								echo '
-								<li class="menu-list">
-									<a href="#"> <i class="fa fa-tags"></i> <span> Manage Orders </span> </a> <i class="fas fa-sort-amount-up-alt"></i>
-									<ul class="sub-menu-list">
-										<li>
-										<a href="list-order.php"> Orders List </a>
-										</li>
-										<li>
-										<a href="invoice-list.php"> Invoice List </a>
-										</li>
-									</ul>
-								</li>';
-							}
-							
-							if($_SESSION['SMC_login_admin_type'] == "Root Admin" || $_SESSION['SMC_login_admin_type'] == "Sales Manager")
-							{
-								echo '
-								<li class="menu-list">
-									<a href="#"> <i class="fa fa-tags"></i> <span> SEO </span> </a> <i class="fas fa-sort-amount-up-alt"></i>
-									<ul class="sub-menu-list">
-										<li>
-											<a href="pages.php"> Pages </a>
-										</li>										
-										<li>
-											<a href="pages-details.php"> Pages Details </a>
-										</li>
-									</ul>
-								</li>';
-							}
-							## ===*=== [A]CCESS CONTROL CONTENT END ===*=== ##
-						?>
-						
-					</ul>
 				</div>
-			</div>
-				
-				
-				<!--=*= MAIN CONTENT START =*=-->
-				<div class="main-content" >
-					<div class="header-section">
-						<a class="toggle-btn"> <i class="fa fa-bars"></i> </a>
-						
-						<form class="searchform" action="" method="post">
-							<input type="text" class="form-control" name="keyword" placeholder="Search here..." />
-						</form>
-						
-						<div class="menu-right">
-							<ul class="notification-menu">
-								<li>
-									<a href="#" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
-										<img src="<?php echo $GLOBALS['ADMINS_DIRECTORY'] . $_SESSION['SMC_login_admin_image']; ?>" alt="" />
-										<?php echo $_SESSION['SMC_login_admin_name']; ?> 
-										<span class="caret"></span>
-									</a>
-									<ul class="dropdown-menu dropdown-menu-usermenu pull-right">
-										<li>
-											<a href="?exit=lock"><i class="fa fa-user"></i> Lock Screen </a>
-										</li>
-										<li>
-											<a href="?exit=yes"><i class="fa fa-sign-out"></i> Log Out </a>
-										</li>
-									</ul>
-								</li>
+				<div class="header-bottom sticky-header">
+					<div class="container">
+						<nav class="main-nav">
+							<ul class="menu sf-arrows">
+								<li class="active"><a href="index.php">Home</a></li>
+								
+								<?php
+									#== CREATE DYNAMIC MAIN MENU FROM CATEGORIES
+									foreach($categoryMenu as $eachCategory)
+									{
+										echo'
+										<li><a href="#" class="sf-with-ul">'.$eachCategory['category_name'].'</a>
+										<ul>';
+										
+										# GET SUBCATEGORIES DATA FOR SUB MENU BASED ON MAIN CATEGORIES
+										$columnName = $tableName = $whereValue = null;
+										$columnName = "*";
+										$tableName = "subcategories";
+										$whereValue['category_id'] = $eachCategory['id'];
+										$subcategoryMenu = $eloquent->selectData($columnName, $tableName, @$whereValue);	
+										
+										foreach($subcategoryMenu as $eachSubcategory)
+										{
+											echo '<li><a href="category.php?id='.$eachSubcategory['id'].'">'.$eachSubcategory['subcategory_name'].'</a></li>';
+										}
+										
+										echo '</ul>
+										</li>';
+									}
+								?>
+								
 							</ul>
-						</div>
-					</div>																																																
+						</nav>
+					</div>
+				</div>
+			</header>																																																													

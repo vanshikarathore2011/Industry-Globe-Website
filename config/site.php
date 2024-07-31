@@ -1,19 +1,22 @@
 <?php
-### Website Configuration
-$GLOBALS['CURRENCY'] = "&#2547;" ;
+### WEBSITE CURRENCY CONFIGURATION
+$GLOBALS['CURRENCY'] = "&#8377;" ;
+
+### TAX CONFIGURATION
+$GLOBALS['TAX'] = 7.5 ;
 
 ### ADMINS IMAGE DIRECTORY
-$GLOBALS['ADMINS_DIRECTORY'] = "../public/uploads/admins/";
+$GLOBALS['ADMINS_DIRECTORY'] = "public/uploads/admins/";
 
 ### SLIDER IMAGE DIRECTORY
-$GLOBALS['SLIDES_DIRECTORY'] = "../public/uploads/slides/";
+$GLOBALS['SLIDES_DIRECTORY'] = "public/uploads/slides/";
 
 ### PRODUCT MASTER IMAGE DIRECTORY
-$GLOBALS['PRODUCT_DIRECTORY'] = "../public/uploads/products/";
+$GLOBALS['PRODUCT_DIRECTORY'] = "public/uploads/products/";
 
 ### ADDITIONAL PRODUCT IMAGE DIRECTORY
-$GLOBALS['PRODUCTADD_DIRECTORY'] = "../public/uploads/prodaddimages/";
+$GLOBALS['PRODUCTADD_DIRECTORY'] = "public/uploads/prodaddimages/";
 
 ### SUBCATEGORY BANNER IMAGE DIRECTORY
-$GLOBALS['BANNER_DIRECTORY'] = "../public/uploads/banners/";
+$GLOBALS['BANNER_DIRECTORY'] = "public/uploads/banners/";
 ?>

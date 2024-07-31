@@ -1,365 +1,251 @@
 <?php
 ## ===*=== [C]ALLING CONTROLLER ===*=== ##
 include("app/Http/Controllers/Controller.php");
-include("app/Http/Controllers/DashboardController.php");
-include("app/Models/Eloquent.php");
 
 
 ## ===*=== [O]BJECT DEFINED ===*=== ##
-$dashboard = new DashboardController;
+$control = new Controller;
 $eloquent = new Eloquent;
 
 
-## ===*=== [F]ETCH SUMMARY DATA ===*=== ##
-
-#== TOTAL SALE STATUS
-$saleResult = $dashboard->sumResult('orders', 'grand_total');
-$totalSale = ceil($saleResult[0]['SUM(grand_total)']);	
-
-
-#== THIS MONTH SALE STATUS
-$monthResult = $dashboard->sumByDate('orders', 'grand_total', 'order_date');
-$monthSale = ceil($monthResult[0]['SUM(grand_total)']);
-
-
-#== NEWLY ADDED PRODUCT STATUS
-$newResult = $dashboard->dateData('products', 'created_at');
-$newProduct = count($newResult);	
+## ===*=== [U]PDATE CUSTOMER ACCOUNT INFORMATION ===*=== ##
+if(isset($_POST['update_accinfo']))
+{
+	$tableName = "customers";
+	$columnValue["customer_name"] = $_POST['upcstmr_name'];
+	$columnValue["customer_email"] = $_POST['upcstmr_email'];
+	$columnValue["customer_mobile"] = $_POST['upcstmr_phn'];
+	$columnValue["customer_address"] = $_POST['upcstmr_add'];
+	$whereValue["id"] = $_SESSION['SSCF_login_id'] ;
+	$updatecustomerData = $eloquent->updateData($tableName, $columnValue, @$whereValue);
+}
+## ===*=== [U]PDATE CUSTOMER ACCOUNT INFORMATION ===*=== ##
 
 
-#== TOTAL TAX STATUS
-$taxResult = $dashboard->sumResult('orders', 'tax');
-$totalTax = ceil($taxResult[0]['SUM(tax)']);	
+## ===*=== [F]ETCH SHIPPING DATA WHEN USER LOGED IN AND HAVE SUBMITTED ===*=== ##
+if(@$_SESSION['SSCF_login_id'] > 0)
+{
+	$columnName = $tableName = $whereValue = null;
+	$columnName = "*";
+	$tableName = "shippings";
+	$whereValue["shippings.customer_id"] = $_SESSION['SSCF_login_id'];
+	$cstmrShipDetails = $eloquent->selectData($columnName, $tableName, @$whereValue);		
+	
+	$columnName = $tableName = $whereValue = null;
+	$columnName = "*";
+	$tableName = "customers";
+	$whereValue["id"] = $_SESSION['SSCF_login_id'];
+	$cstmrDetails = $eloquent->selectData($columnName, $tableName, @$whereValue);
 
-
-#== NEW ORDER STATUS
-$orderResult = $dashboard->getData('orders', 'order_item_status', 'Pending');
-$totalOrder = count($orderResult);
-
-
-#== PRODUCT STATUS
-$columnName = $tableName = null;
-$columnName["1"] = "id";
-$tableName = "products";
-$productResult = $eloquent->selectData($columnName, $tableName);
-$totalProduct = count($productResult);	
-
-
-#== SUBSCRIBER STATUS
-$columnName = $tableName = null;
-$columnName["1"] = "id";
-$tableName = "newsletters";
-$subscriberResult = $eloquent->selectData($columnName, $tableName);
-$totalSubscriber = count($subscriberResult);	
-
-
-#== CUSTOMER STATUS
-$columnName = $tableName = null;
-$columnName["1"] = "id";
-$tableName = "customers";
-$customerResult = $eloquent->selectData($columnName, $tableName);
-$totalCustomer = count($customerResult);
-
-## ===*=== [F]ETCH SUMMARY DATA ===*=== ##
+}
+## ===*=== [F]ETCH SHIPPING DATA WHEN USER LOGED IN AND HAVE SUBMITTED ===*=== ##
 ?>
 
 <!--=*= DASHBOARD SECTION START =*=-->
-<div class="wrapper">	
-	<div class="row states-info" style="text-transform: uppercase;">
-		<div class="col-md-3">
-			<div class="panel red-bg">
-				<div class="panel-body">
-					<div class="row">
-						<div class="col-xs-4">
-							<i class="fa fa-usd"></i>
-						</div>
-						<div class="col-xs-8">
-							<span class="state-title"> Total Sale </span>
-							<h4 class="counter"> <?= $totalSale ?> </h4>
-						</div>
-					</div>
-				</div>
-			</div>
+<main class="main">
+	<nav aria-label="breadcrumb" class="breadcrumb-nav">
+		<div class="container">
+			<ol class="breadcrumb">
+				<li class="breadcrumb-item"><a href="index.php">Home</a></li>
+				<li class="breadcrumb-item active" aria-current="page">Dashboard</li>
+			</ol>
 		</div>
-		<div class="col-md-3">
-			<div class="panel blue-bg">
-				<div class="panel-body">
-					<div class="row">
-						<div class="col-xs-4">
-							<i class="fa fa-tags"></i>
-						</div>
-						<div class="col-xs-8">
-							<span class="state-title"> Sales This Month </span>
-							<h4 class="counter"> <?= $monthSale ?> </h4>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-		<div class="col-md-3">
-			<div class="panel green-bg">
-				<div class="panel-body">
-					<div class="row">
-						<div class="col-xs-4">
-							<i class="fa fa-gavel"></i>
-						</div>
-						<div class="col-xs-8">
-							<span class="state-title"> New Order </span>
-							<h4 class="counter"> <?= $totalOrder ?> </h4>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-		<div class="col-md-3">
-			<div class="panel yellow-bg">
-				<div class="panel-body">
-					<div class="row">
-						<div class="col-xs-4">
-							<i class="fa fa-file-text"></i>
-						</div>
-						<div class="col-xs-8">
-							<span class="state-title"> Total Tax </span>
-							<h4 class="counter"> <?= $totalTax ?> </h4>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>	
-	<div class="row states-info" style="text-transform: uppercase;">
-		<div class="col-md-3">
-			<div class="panel green-bg">
-				<div class="panel-body">
-					<div class="row">
-						<div class="col-xs-4">
-							<i class="fa fa-dot-circle-o"></i>
-						</div>
-						<div class="col-xs-8">
-							<span class="state-title"> New Products Added </span>
-							<h4 class="counter"> <?= $newProduct ?> </h4>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-		<div class="col-md-3">
-			<div class="panel yellow-bg">
+	</nav>	
+	<div class="container">
+		<div class="row">
+			<div class="col-lg-9 order-lg-last dashboard-content">
+				<h2>MY DASHBOARD</h2>
 				
-				<div class="panel-body">
-					<div class="row">
-						<div class="col-xs-4">
-							<i class="fa fa-anchor"></i>
+				<?php
+					#== A GREETING MESSEGE IF USER LOGGED IN
+					if(@$_SESSION['SSCF_login_id'] > 0)
+					{
+						echo '
+						<div class="alert alert-success alert-dismissible fade show" role="alert">
+							Hello, <strong>'. @$_SESSION['SSCF_login_user_name'] .'</strong> Welcome to your account dashboard and you could update your account information.
+							<button type="button" class="close" data-dismiss="alert" aria-label="Close">
+								<span aria-hidden="true">&times;</span>
+							</button>
 						</div>
-						<div class="col-xs-8">
-							<span class="state-title"> Total Products </span>
-							<h4 class="counter"> <?= $totalProduct ?></h4>
-						</div>
-					</div>
-				</div>
-				
-			</div>
-		</div>
-		<div class="col-md-3">
-			<div class="panel red-bg">
-				<div class="panel-body">
-					<div class="row">
-						<div class="col-xs-4">
-							<i class="fa fa-chain"></i>
-						</div>
-						<div class="col-xs-8">
-							<span class="state-title"> Newsletter Subscriber </span>
-							<h4 class="counter"> <?= $totalSubscriber ?> </h4>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-		<div class="col-md-3">
-			<div class="panel blue-bg">
-				<div class="panel-body">
-					<div class="row">
-						<div class="col-xs-4">
-							<i class="fa fa-user"></i>
-						</div>
-						<div class="col-xs-8">
-							<span class="state-title"> Register Customer </span>
-							<h4 class="counter"> <?= $totalCustomer ?> </h4>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
-	<div class="row">
-		<div class="col-md-4">
-			<div class="row">
-				<div class="col-md-12">
-					<div class="panel">
-						<div class="panel-body">
-							<div class="profile-pic text-center">
-								<img alt="" src="<?php echo $GLOBALS['ADMINS_DIRECTORY'] . $_SESSION['SMC_login_admin_image']; ?>">
-							</div>
-							<div class="text-center" style="padding-bottom: 10px;">
-								<h3> <?php echo $_SESSION['SMC_login_admin_name']; ?> </h3>
-								<h5 class="designation"> FULL STACK WEB DEVELOPER </h5>
-							</div>
-							<a class="btn p-follow-btn pull-left" href="#"> <i class="fa fa-check"></i> Following</a>
-							<ul class="p-social-link pull-right">
-								<li class="active">
-									<a href="#">
-										<i class="fa fa-github"></i>
-									</a>
-								</li>
-								<li class="active">
-									<a href="#">
-										<i class="fa fa-stack-overflow"></i>
-									</a>
-								</li>
-								<li class="active">
-									<a href="#">
-										<i class="fa fa-linkedin"></i>
-									</a>
-								</li>										
-								<li class="active">
-									<a href="#">
-										<i class="fa fa-facebook"></i>
-									</a>
-								</li>									
-								<li class="active">
-									<a href="#">
-										<i class="fa fa-twitter"></i>
-									</a>
-								</li>									
-							</ul>
-						</div>
-					</div>
-				</div>
-			</div>
-			<div class="row">
-				<div class="col-md-12">
-					<div class="panel">
-						<div class="panel-body">
-							<div style="margin-bottom: 10px;">
-								<a class="btn p-follow-btn" href="mailto:md.aamroni@hotmail.com"> 
-									<i class="fa fa-envelope"></i> &nbsp; md.aamroni@hotmail.com 
-								</a>
-							</div>
-							<div style="margin-bottom: 10px;">
-								<a class="btn p-follow-btn" href="callto:8801316440504" style="margin-right: 8px;"> 
-									<i class="fa fa-phone"></i> &nbsp; +880 1316 440504
-								</a>
-								<a class="btn p-follow-btn" href="skype:live:.cid.5ed7daebee5e7820"> 
-									<i class="fa fa-skype"></i> &nbsp; md.aamroni
-								</a>
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-		<div class="col-md-8">
-			<div class="row">
-				<div class="col-md-12">
+						';
+					}
 					
-					<section class="panel">
-						<div class="carousel slide auto panel-body" id="c-slide">
-							<ol class="carousel-indicators out">
-								<li data-target="#c-slide" data-slide-to="0" class="active"></li>
-								<li data-target="#c-slide" data-slide-to="1" class=""></li>
-								<li data-target="#c-slide" data-slide-to="2" class=""></li>
-								<li data-target="#c-slide" data-slide-to="3" class=""></li>
-							</ol>
-							<div class="carousel-inner">
-								<div class="item text-center active">
-									<h3> SUPERSHOP | ONLINE SHOPPING STORE </h3>
-									<p> frontEnd Development </p>
-									<p class="text-muted">
-										supershop.com is a eCommerce application where all of the data is totally dynamic content
-									</p>
-								</div>
-								<div class="item text-center">
-									<h3> SUPERSHOP | ONLINE SHOPPING STORE </h3>
-									<p> frontEnd Development </p>
-									<p class="text-muted">
-										and also lightweight as well, so that it will be load fast as user expectation and friendly
-									</p>
-								</div>
-								<div class="item text-center">
-									<h3> SUPERSHOP | ONLINE SHOPPING STORE </h3>
-									<p> backEnd Development </p>
-									<p class="text-muted">
-										in this application, designed with MVC pattern and also clean coding standard
-									</p>
-								</div>								
-								<div class="item text-center">
-									<h3> SUPERSHOP | ONLINE SHOPPING STORE </h3>
-									<p> backEnd Development </p>
-									<p class="text-muted">
-										without any framework, in raw PHP this application is totally dynamic for crud operation
-									</p>
-								</div>
-							</div>
-							<a class="left carousel-control" href="#c-slide" data-slide="prev">
-								<i class="fa fa-angle-left"></i>
-							</a>
-							<a class="right carousel-control" href="#c-slide" data-slide="next">
-								<i class="fa fa-angle-right"></i>
-							</a>
+					#== IF ACCOUNT IS UPDATED A SUCCESS MESSAGE WILL BE APPEAR
+					if(isset($_POST['update_accinfo']))
+					{
+						if(@$updatecustomerData > 0)
+						echo '
+						<div class="alert alert-success alert-dismissible fade show" role="alert">
+							Hello, <strong>'. @$_SESSION['SSCF_login_user_name'] .'</strong> Your account information is successfully updated.
+							<button type="button" class="close" data-dismiss="alert" aria-label="Close">
+								<span aria-hidden="true">&times;</span>
+							</button>
 						</div>
-					</section>
+						';
+					}
+				?> 
+				
+				<div class="mb-4">
+					<!--=*= CREATE A EMPTY SPACE BETWEEN CONTENT =*=-->
+				</div>
+				<h3>Account Information</h3>
+				<div class="row">
+					<div class="col-md-6">
+						<div class="card">
+							<div class="card-header">
+								Contact Information
+							</div>
+							<div class="card-body">
+								
+								<?php 
+									#== CONTACT INFORMATION
+									if(@$_SESSION['SSCF_login_id'] > 0) 
+									{
+										echo '<p>'. $cstmrDetails[0]['customer_name'] .'<br/>'. $cstmrDetails[0]['customer_email'] .'<br/>'. $cstmrDetails[0]['customer_mobile'] .'</p>';
+									} 
+									else 
+									{
+										echo '<p> You have not create an account. <a href="register-account.php" class="text-info"> <b>Register an Account</b> </a> </p>';
+									}
+								?>
+								
+							</div>
+						</div>
+					</div>
+					<div class="col-md-6">
+						<div class="card">
+							<div class="card-header"> Newsletters </div>
+							<div class="card-body">
+								
+								<?php
+									#== NEWSLETTER INFORMATION
+									if(!empty($_SESSION['SMCF_login_user_newsletter'])) //newsletter section work in pending
+									{
+										if(@$_SESSION['SSCF_login_id'] > 0)
+										echo "<p>" . @$_SESSION['SMCF_login_user_newsletter'] . "</p>";
+										else
+										echo '<p> You are currently not subscribed to any newsletter. </p>';
+									}
+									else
+									{
+										echo '<p> You are currently not subscribed to any newsletter. </p>';
+									}
+								?>
+								
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="card">
+					<div class="card-header"> Address Book </div>
+					<div class="card-body">
+						<div class="row">
+							<div class="col-md-6">
+								<h4 class="">Your Billing Address</h4>
+								
+								<?php 
+									#== REGISTERED CUSTOMER ADDRESS DATA
+									if(@$_SESSION['SSCF_login_id'] > 0) {
+										echo '<address>' . @$cstmrDetails[0]['customer_address'] . '</address>';
+										} else {
+										echo '<p> You have not set a default shipping address. </p>';
+									}
+								?>
+								
+							</div>
+							<div class="col-md-6">
+								<h4 class="">Last Shipping Address</h4>
+								
+								<?php
+									#== SHIPPING ADDRESS DATA
+									if(@$_SESSION['SSCF_login_id'] > 0) {
+										echo '<address> '. 
+										@$cstmrShipDetails[0]['shipcstmr_name'] . '<br/>' .
+										@$cstmrShipDetails[0]['shipcstmr_mobile'] . '<br/>' .
+										@$cstmrShipDetails[0]['shipcstmr_profession'] . '<br/>' .
+										@$cstmrShipDetails[0]['shipcstmr_streetadd'] . '<br/>' .
+										@$cstmrShipDetails[0]['shipcstmr_city'] . "-" . @$cstmrShipDetails[0]['shipcstmr_zip'] . '<br/>' .
+										@$cstmrShipDetails[0]['shipcstmr_country'] . '<br/>' .
+										'</address>';
+										} else {
+										echo '<p> You have not set a default shipping address. </p>';
+									}
+								?>
+								
+							</div>
+						</div>
+					</div>
+				</div>
+				<div>
+					
+					<?php
+						#== EDIT ACCOUNT BUTTON
+						if(@$_SESSION['SSCF_login_id'] > 0)
+						{
+					?>
+						
+						<div class="checkout-discount">
+							<h2 class="step-title">
+								<a data-toggle="collapse" href="#edit-account" class="collapsed card-edit btn btn-sm btn-outline-info float-right" role="button">
+									Edit Account Information
+								</a>
+							</h2>
+							<div class="collapse" id="edit-account">
+								<form action="" method="post">
+									<div class="row">
+										<div class="col-md-12">
+											<div class="form-group required-field">
+												<input type="text" name="upcstmr_name" class="form-control" name="" value="<?php echo $cstmrDetails[0]['customer_name']; ?>">
+											</div>
+											<div class="form-group required-field">
+												<input type="email" name="upcstmr_email" class="form-control" value="<?php echo $cstmrDetails[0]['customer_email']; ?>">
+											</div>
+											<div class="form-group required-field">
+												<input type="text" name="upcstmr_phn" class="form-control" value="<?php echo $cstmrDetails[0]['customer_mobile']; ?>">
+											</div>
+											<div class="form-group required-field">
+												<input type="text" name="upcstmr_add" class="form-control" value="<?php echo $cstmrDetails[0]['customer_address']; ?>">
+											</div>
+											<button type="submit" name="update_accinfo" class="btn btn-sm btn-outline-info">Update</button>
+										</div>
+									</div>
+								</form>
+							</div>
+						</div>
+						
+					<?php
+						}
+					?>
 					
 				</div>
-				<div class="col-md-6">
-					<div class="panel">
-						<div class="panel-body p-states green-box">
-							<div class="summary pull-left">
-								<h4>Front End <span>Skiils</span></h4>
-								<span>Designing Languages &amp; Libraries</span>
-								<h5> HTML, CSS, Boostrap, SASS, JavaScript, jQuery & Ajax </h5>
-							</div>
-							<div id="expense" class="chart-bar"></div>
-						</div>
-					</div>
-				</div>
-				<div class="col-md-6">
-					<div class="panel">
-						<div class="panel-body p-states green-box">
-							<div class="summary pull-left">
-								<h4>Back End <span>Skiils</span></h4>
-								<span>Programming Languages, Framework &amp; Database</span>
-								<h5>PHP, MySQL, Laravel, Python</h5>
-							</div>
-							<div id="pro-refund" class="chart-bar"></div>
-						</div>
-					</div>
-				</div>
-				<div class="col-md-6">
-					<div class="panel">
-						<div class="panel-body p-states green-box">
-							<div class="summary pull-left">
-								<h4>Adobe Professional <span>Skiils</span></h4>
-								<span>Softwares and Platforms</span>
-								<h5>Adobe Photoshop CC | Adobe Illustrator CC </h5>
-							</div>
-							<div id="expense2" class="chart-bar"></div>
-						</div>
-					</div>
-				</div>
-				<div class="col-md-6">
-					<div class="panel">
-						<div class="panel-body p-states green-box">
-							<div class="summary pull-left">
-								<h4>Others <span>Skiils</span></h4>
-								<span>Softwares and Platforms</span>
-								<h5> Microsoft Office 2019 | SEO | Digital Marketing </h5>
-							</div>
-							<div id="expense2" class="chart-bar"></div>
-						</div>
-					</div>
-				</div>
 			</div>
-		</div>
+			
+			<aside class="sidebar col-lg-3">
+				<div class="widget widget-dashboard">
+					<h3 class="widget-title">My Account</h3>
+					<ul class="list">
+						<li class="active"><a href="dashboard.php">Account Dashboard</a></li>
+						<li><a href="register-account.php">Register an Account</a></li>
+						<li><a href="user-password.php">Change Password</a></li>
+						<!-- 
+							=*= FOR LATER USED ONLY =*=
+							<li><a href="#">My Orders</a></li>
+							<li><a href="#">Billing Agreements</a></li>
+							<li><a href="#">Recurring Profiles</a></li>
+							<li><a href="#">My Product Reviews</a></li>
+							<li><a href="#">My Tags</a></li>
+							<li><a href="#">My Wishlist</a></li>
+							<li><a href="#">My Applications</a></li>
+							<li><a href="#">Newsletter Subscriptions</a></li>
+							<li><a href="#">My Downloadable Products</a></li>
+						-->
+					</ul>
+					</div>
+				</aside>
+			</div>
 	</div>
-</div>
-<!--=*= DASHBOARD SECTION END =*=-->
+	<div class="mb-5">
+		<!-- CREATE A EMPTY SPACE BETWEEN CONTENT -->
+	</div>
+</main>
+<!--=*= DASHBOARD SECTION START =*=-->

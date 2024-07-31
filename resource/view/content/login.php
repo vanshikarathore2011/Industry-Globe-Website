@@ -1,95 +1,111 @@
 <?php
 ## ===*=== [C]ALLING CONTROLLER ===*=== ##
 include("app/Http/Controllers/Controller.php");
-include("app/Http/Controllers/AdminController.php");
 
 
 ## ===*=== [O]BJECT DEFINED ===*=== ##
-$adminCtrl = new AdminController;
+$eloquent = new Eloquent;
 
 
-## ===*=== [L]OGIN ACCESS ===*=== ##
-if(isset($_POST['try_login']))
+## ===*=== [W]HEN USER TRY TO LOG IN ===*=== ##
+if( isset($_POST['user_login']) )
 {
-	#== LOGIN FORM INPUT FIELD
-	$username = $_POST['username'];
-	$password = sha1($_POST['password']);
+	#== FETCH DATA FROM THE CUSTOMER TABLE AND VALIDATE WITH SUBMITTED DATA
+	$columnName = "*";
+	$tableName = "customers";
+	$whereValue["customer_email"] = $_POST['user_email'];
+	$whereValue["customer_password"] = sha1($_POST['user_pass']);
+	$userLogin = $eloquent->selectData($columnName, $tableName, @$whereValue);
 	
-	#== CHECK VALUES WHICH USER PASSES THE DATA
-	$adminData = $adminCtrl->tryLogin( $username, $password );
-	
-	if(!empty($adminData))
+	#== AFTER VALIDATAION CREATE A SESSION FOR USER ENTIRE FRONT END APPLICATION
+	if(!empty($userLogin))
 	{
-		#== CREATE LOGGED IN USER SESSION FOR USAGE ENTRIE APPLICATION IN FURTHER WHERE NEEDED
-		$_SESSION['SMC_login_time'] = date("Y-m-d H:i:s");
-		$_SESSION['SMC_login_id'] = $adminData[0]['id'];
-		$_SESSION['SMC_login_admin_name'] = $adminData[0]['admin_name'];
-		$_SESSION['SMC_login_admin_email'] = $adminData[0]['admin_email'];
-		$_SESSION['SMC_login_admin_image'] = $adminData[0]['admin_image'];
-		$_SESSION['SMC_login_admin_status'] = $adminData[0]['admin_status'];
-		$_SESSION['SMC_login_admin_type'] = $adminData[0]['admin_type'];
+		$_SESSION['SSCF_login_time'] = date("Y-m-d H:i:s");
+		$_SESSION['SSCF_login_id'] = $userLogin[0]['id'];
+		$_SESSION['SSCF_login_user_name'] = $userLogin[0]['customer_name'];
+		$_SESSION['SSCF_login_user_email'] = $userLogin[0]['customer_email'];
+		$_SESSION['SSCF_login_user_mobile'] = $userLogin[0]['customer_mobile'];
+		$_SESSION['SSCF_login_user_address'] = $userLogin[0]['customer_address'];
 		
-		#== IF USER ID AND PASSWORD IS VALID THEN REDIRECT TO THE DASHBOARD PAGE 
-		header("Location: dashboard.php");
+		echo '<meta http-equiv="Refresh" content="0; url=index.php" />';
 	}
 }
-## ===*=== [L]OGIN ACCESS ===*=== ##
+## ===*=== [W]HEN USER TRY TO LOG IN ===*=== ##
 ?>
 
-<!DOCTYPE html>
-<html lang="en">
-	<head>
-		<meta charset="utf-8">
-		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-		<meta name="description" content="Back End Development">
-		<meta name="author" content="Md. Abdullah Al Mamun Roni">
-		
-		<title>Admin Login | SuperShop</title>
-		
-		<!--=*= CSS FILES SOURCE START =*=-->
-		<link rel="shortcut icon" href="../public/assets/images/favicon/faviconBackEnd.png" type="image/png">
-		<link href="public/css/style.css" rel="stylesheet">
-		<link href="public/css/style-responsive.css" rel="stylesheet">
-		<!--=*= CSS FILES SOURCE END =*=-->
-		
-		<!--=*= DISABLE IMAGE DRAG PROPERTIES =*=-->
-		<style>
-			img {
-				-moz-user-select: none;
-				-webkit-user-select: none;
-				-ms-user-select: none;
-				user-select: none;
-				-webkit-user-drag: none;
-				user-drag: none;
-				-webkit-touch-callout: none;
-			}
-		</style>
-		<!--=*= DISABLE IMAGE DRAG PROPERTIES =*=-->
-	</head>
-	
-	<body class="login-body">
+<!--=*= LOG IN SECTION START =*=-->
+<main class="main">
+	<nav aria-label="breadcrumb" class="breadcrumb-nav">
 		<div class="container">
-			<form class="form-signin" method="post" action="">
-				<div class="form-signin-heading text-center">
-					<h1 class="sign-title"> Sign In </h1>
-					<img class="disable" src="../public/assets/images/favicon/loginBackEnd.png" alt="" style="height: 126px;"/>
-				</div>
-				<div class="login-wrap">
-					<input name="username" type="email" class="form-control" placeholder="Email ID" >
-					<input name="password" type="password" class="form-control" placeholder="Password" >
-					<button name="try_login" class="btn btn-lg btn-login btn-block" type="submit">
-						<i class="fa fa-check"></i>
-					</button>
-					<div class="registration"> Not a member yet? <a href="registration.php"> Signup </a></div>
-				</div>
-			</form>
-		</div>	
+			<ol class="breadcrumb">
+				<li class="breadcrumb-item"><a href="index.php">HOME </a></li>
+				<li class="breadcrumb-item"><a href="login.php">LOG IN </a></li>
+			</ol>
+		</div>
+	</nav>
+	<div class="container">
 		
-		<!--=*= JS FILES SOURCE START =*=-->
-		<script src="./public/js/jquery-3.5.1.min.js"></script>
-		<script src="./public/js/bootstrap.min.js"></script>
-		<script src="./public/js/modernizr.min.js"></script>
-		<!--=*= JS FILES SOURCE END =*=-->
+		<?php
+			if(isset($_POST['user_login']))
+			{
+				#== ERROR MESSAGE IF USER IS EMPTY OR NOT REGISTER
+				if(empty($userLogin))
+				{
+					echo '<div class="alert alert-danger">Either customer dosen\'t exist or credential is wrong. Please retry!</div>';
+				}
+			}
+		?>
 		
-	</body>
-</html>		
+		<div class="row">
+			<div class="col">
+				<div class="featured-boxes">
+					<div class="row">
+						<div class="col-md-5 offset-md-1">
+						</div>
+						<div class="col-md-5 offset-md-1">
+							<div class="featured-box featured-box-primary text-left mt-5">
+								<div class="box-content">
+									<h2 class="color-primary font-weight-semibold text-4 text-uppercase mb-3">LOG IN</h2>
+									<form action="" id="frmSignIn" method="post" class="needs-validation">
+										<div class="form-row">
+											<div class="form-group col">
+												<label class="font-weight-bold text-dark text-2">E-mail Address</label>
+												<input type="email" name="user_email" class="form-control form-control-lg" placeholder="type your email address" required>
+											</div>
+										</div>
+										<div class="form-row">
+											<div class="form-group col">
+												<a class="float-right" href="user-password.php">(forgot your Password?)</a>
+												<label class="font-weight-bold text-dark text-2">Password</label>
+												<input type="password" name="user_pass" class="form-control form-control-lg" placeholder="type your password" required>
+											</div>
+										</div>
+										<div class="form-row">
+											<div class="form-group col-lg-6">
+												<!-- CREATE A EMPTY SPACE BETWEEN CONTENT -->
+											</div>
+										</div>
+										<div class="form-footer">
+											<a href="index.php" class="btn btn-outline-warning">
+												<i class="icon-angle-double-left"></i>BACK TO HOME
+											</a>
+											<div class="form-footer-right">
+												<button type="submit" name="user_login" class="btn btn-primary">LOGIN</button>
+											</div>
+										</div>
+										<div class="form-row">
+											<div class="font-weight-bold text-info text-2">
+												OR | <a href="register-account.php" class="btn btn-info">REGISTER AN ACCOUNT</a>
+											</div>
+										</div>
+									</form>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</main>	
+<!--=*= LOG IN SECTION END =*=-->
