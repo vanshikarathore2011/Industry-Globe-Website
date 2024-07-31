@@ -1,7 +1,7 @@
-## Admin Control Panel
+## SuperShop - Single Vendor Ecommerce Application
 
 
-### BackEnd Application Folder Structure
+### FrontEnd Application Folder Structure
 
 ```
 ├───app
@@ -9,17 +9,40 @@
 │   │   └───Controllers
 │   └───Models
 ├───config
-├───images
 ├───public
-│   ├───css
-│   ├───fonts
-│   ├───js
-│   ├───summernote
-│   └───tagplug
+│   ├───assets
+│   │   ├───css
+│   │   ├───fonts
+│   │   ├───images
+│   │   └───js
+│   └───uploads
+│       ├───admins
+│       ├───banners
+│       ├───products
+│       └───slides
 └───resource
-    ├───backup
-    ├───schema
+    ├───files
     └───view
         ├───content
         └───include
 ```
+
+
+
+admin password: abc123
+
+
+### Features:
+
+- Home Page
+- Category
+- Category Lists
+- Product
+- Serach
+- Cart
+- Payments
+- Order
+- Invoice Generate
+- User Registration
+- User Login
+- User Dashboard
